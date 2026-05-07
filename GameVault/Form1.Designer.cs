@@ -35,8 +35,8 @@
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
-            button1 = new Button();
-            button2 = new Button();
+            btnSave = new Button();
+            btnDelete = new Button();
             ((System.ComponentModel.ISupportInitialize)dgvGames).BeginInit();
             SuspendLayout();
             // 
@@ -98,31 +98,33 @@
             label3.TabIndex = 2;
             label3.Text = "Price";
             // 
-            // button1
+            // btnSave
             // 
-            button1.Location = new Point(53, 329);
-            button1.Name = "button1";
-            button1.Size = new Size(446, 29);
-            button1.TabIndex = 3;
-            button1.Text = "Save";
-            button1.UseVisualStyleBackColor = true;
+            btnSave.Location = new Point(53, 329);
+            btnSave.Name = "btnSave";
+            btnSave.Size = new Size(446, 29);
+            btnSave.TabIndex = 3;
+            btnSave.Text = "Save";
+            btnSave.UseVisualStyleBackColor = true;
+            btnSave.Click += btnSave_Click;
             // 
-            // button2
-            // 
-            button2.Location = new Point(53, 364);
-            button2.Name = "button2";
-            button2.Size = new Size(446, 29);
-            button2.TabIndex = 3;
-            button2.Text = "Delete";
-            button2.UseVisualStyleBackColor = true;
+            // btnDelete
+            //
+            btnDelete.Location = new Point(53, 364);
+            btnDelete.Name = "btnDelete";
+            btnDelete.Size = new Size(446, 29);
+            btnDelete.TabIndex = 3;
+            btnDelete.Text = "Delete";
+            btnDelete.UseVisualStyleBackColor = true;
+            btnDelete.Click += btnDelete_Click;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1334, 636);
-            Controls.Add(button2);
-            Controls.Add(button1);
+            Controls.Add(btnDelete);
+            Controls.Add(btnSave);
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
@@ -146,7 +148,7 @@
         private Label label1;
         private Label label2;
         private Label label3;
-        private Button button1;
-        private Button button2;
+        private Button btnSave;
+        private Button btnDelete;
     }
 }

@@ -6,7 +6,7 @@ using GameVault.Models;
 
 namespace GameVault.DAL
 {
-    internal class gameDAL
+    internal class GameDAL
     {
         // how i installed ssms with the Trust serverCertification i must set it as true
         private string connectionString = "Server=localhost;Database=GameVault;User Id=sa; Password=Dylan072912.;TrustServerCertificate=True;";
