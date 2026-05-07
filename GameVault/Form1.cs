@@ -1,101 +1,163 @@
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 using GameVault.Models;
-using GameVault.BLL; // Importamos nuestro "Chef"
+using GameVault.BLL; // Import our BLL
 
 namespace GameVault
 {
     public partial class Form1 : Form
     {
-        // 1. Instanciamos nuestra Capa Lógica y creamos la variable centinela
+        // 1. Instantiate the Logic Layer and create the control variable
         private GameBLL businessLogic = new GameBLL();
-        private int selectedId = 0; // Empieza en 0 (Modo: Crear)
+        private int selectedId = 0; // Starts at 0 (Create Mode)
 
         public Form1()
         {
             InitializeComponent();
+            SubscribeEvents();
+            ApplyStyles();
         }
 
-        // Este evento ocurre apenas se abre el programa
+        // Helper to wire up events that are missing from the designer
+        private void SubscribeEvents()
+        {
+            // Only hook up events that are truly missing from Form1.Designer.cs
+            this.Load += Form1_Load;
+            dgvGames.CellClick += dgvGames_CellClick;
+        }
+
+        // Apply modern styles so it doesn't look too simple
+        private void ApplyStyles()
+        {
+            this.BackColor = Color.FromArgb(240, 244, 248); // Clean light background
+            this.Font = new Font("Segoe UI", 10);
+            this.Text = "GameVault Manager";
+            this.StartPosition = FormStartPosition.CenterScreen;
+
+            // DataGridView Modern Styles
+            dgvGames.BackgroundColor = Color.White;
+            dgvGames.BorderStyle = BorderStyle.None;
+            dgvGames.CellBorderStyle = DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvGames.DefaultCellStyle.SelectionBackColor = Color.FromArgb(52, 152, 219); // Blue selection
+            dgvGames.DefaultCellStyle.SelectionForeColor = Color.White;
+            dgvGames.DefaultCellStyle.BackColor = Color.White;
+            dgvGames.DefaultCellStyle.ForeColor = Color.FromArgb(50, 50, 50);
+            dgvGames.EnableHeadersVisualStyles = false;
+            dgvGames.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
+            dgvGames.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(41, 128, 185); // Header blue
+            dgvGames.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dgvGames.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            dgvGames.ColumnHeadersHeight = 35;
+            dgvGames.SelectionMode = DataGridViewSelectionMode.FullRowSelect; // Select the entire row clicking anywhere
+            dgvGames.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dgvGames.ReadOnly = true;
+            dgvGames.RowHeadersVisible = false;
+
+            // Buttons Styling
+            StyleButton(btnSave, Color.FromArgb(46, 204, 113)); // Emerald Green
+            StyleButton(btnDelete, Color.FromArgb(231, 76, 60)); // Alizarin Red
+        }
+
+        private void StyleButton(Button btn, Color bgColor)
+        {
+            btn.FlatStyle = FlatStyle.Flat;
+            btn.FlatAppearance.BorderSize = 0;
+            btn.BackColor = bgColor;
+            btn.ForeColor = Color.White;
+            btn.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+            btn.Cursor = Cursors.Hand;
+        }
+
+        // This event occurs as soon as the application opens
         private void Form1_Load(object sender, EventArgs e)
         {
             RefreshTable();
         }
 
-        // Método de limpieza que usaremos a cada rato
+        // Cleanup method used frequently
         private void RefreshTable()
         {
-            // Le pedimos la lista al BLL y la metemos a la tabla
+            // Request the list from BLL and bind it to the table
             dgvGames.DataSource = businessLogic.GetAllGames();
 
-            // Limpiamos las cajas de texto
+            // Clear text boxes
             txtTitle.Clear();
             txtGenre.Clear();
             txtPrice.Clear();
 
-            // Reseteamos el ID a 0 para asegurar que el modo "Crear" esté activo
+            // Reset the ID to 0 to ensure "Create" mode is active
             selectedId = 0;
         }
 
-        // EL BOTÓN SAVE (La Lógica Dual)
+        // THE SAVE BUTTON (Dual Logic)
         private void btnSave_Click(object sender, EventArgs e)
         {
             try
             {
-                // Armamos el "molde" con lo que el usuario escribió
+                // Validate Price input safely before assigning. 
+                // We use InvariantCulture and replace commas with dots to avoid regional format crashes (like "400.00" vs "400,00").
+                string priceInput = txtPrice.Text.Replace(',', '.');
+                if (!decimal.TryParse(priceInput, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out decimal priceValue))
+                {
+                    MessageBox.Show("Please enter a valid number for the price.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return; // Stop the save process
+                }
+
+                // Build the object with what the user wrote
                 Game game = new Game();
-                game.Id = selectedId; // Si es 0 insertará, si es >0 actualizará
+                game.Id = selectedId; // If 0 it inserts, if >0 it updates
                 game.Title = txtTitle.Text;
                 game.Genre = txtGenre.Text;
-                game.Price = Convert.ToDecimal(txtPrice.Text);
+                game.Price = priceValue;
 
-                // Se lo mandamos al Chef (BLL) para que valide y guarde
+                // Send it to the BLL to validate and save
                 businessLogic.SaveGame(game);
 
                 MessageBox.Show("Game saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                RefreshTable(); // Refrescamos para ver los cambios
+                RefreshTable(); // Refresh to see the changes
             }
             catch (Exception ex)
             {
-                // Si el BLL lanza un error (ej. precio negativo), lo atrapamos y mostramos aquí
+                // If the BLL throws an error (e.g. negative price), catch it and show it here
                 MessageBox.Show(ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
-        // EL EVENTO DE LA TABLA (Para seleccionar un juego)
+        // THE TABLE EVENT (To select a game)
         private void dgvGames_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            // Verificamos que no hayan hecho clic en el encabezado
+            // Ensure they didn't click on the header
             if (e.RowIndex >= 0)
             {
-                // Atrapamos el ID de la fila seleccionada y cambiamos al modo "Actualizar"
+                // Capture the ID of the selected row and switch to "Update" mode
                 selectedId = Convert.ToInt32(dgvGames.Rows[e.RowIndex].Cells["Id"].Value);
 
-                // Pasamos los datos a los TextBox
+                // Pass the data to the TextBoxes
                 txtTitle.Text = dgvGames.Rows[e.RowIndex].Cells["Title"].Value.ToString();
                 txtGenre.Text = dgvGames.Rows[e.RowIndex].Cells["Genre"].Value.ToString();
                 txtPrice.Text = dgvGames.Rows[e.RowIndex].Cells["Price"].Value.ToString();
             }
         }
 
-        // EL BOTÓN DELETE (El flujo seguro)
+        // THE DELETE BUTTON (Safe flow)
         private void btnDelete_Click(object sender, EventArgs e)
         {
             try
             {
-                // 1. Verificamos si hay algo seleccionado
+                // 1. Check if something is selected
                 if (selectedId == 0)
                 {
                     MessageBox.Show("Please select a game from the table first.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                // 2. Pedimos confirmación al usuario
+                // 2. Ask user for confirmation
                 DialogResult answer = MessageBox.Show("Are you sure you want to delete this game?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
                 if (answer == DialogResult.Yes)
                 {
-                    // 3. Mandamos borrar, avisamos y limpiamos
+                    // 3. Delete, notify, and refresh
                     businessLogic.DeleteGame(selectedId);
                     MessageBox.Show("Game deleted successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     RefreshTable();

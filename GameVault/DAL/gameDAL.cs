@@ -83,7 +83,7 @@ namespace GameVault.DAL
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                using (SqlCommand command = new SqlCommand("sp_UodateGame", connection))
+                using (SqlCommand command = new SqlCommand("sp_UpdateGame", connection))
                 {
                     command.CommandType = CommandType.StoredProcedure;
                     // We need the id to know which game we're going to modify
